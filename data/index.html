@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>我的作品集</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #00a1d6;
+            --secondary-color: #6c757d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            top: 0;
+            left: 0;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.97);
+            padding: 1rem 0;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            transition: all 0.4s;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .social-links a {
+            margin-left: 1.5rem;
+            color: var(--secondary-color);
+            font-size: 1.5rem;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .social-links a:hover {
+            color: var(--primary-color);
+        }
+
+        /* 仅修改的hero动画部分 */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-content h1 {
+            font-size: clamp(2rem, 8vw, 4rem);
+            margin-bottom: 1.5rem;
+            background: linear-gradient(-45deg, #00a1d6, #23d5ab, #00a1d6);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: 
+                textReveal 1s ease-out forwards,
+                gradientFlow 8s ease-in-out infinite 0.5s;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .hero-content p {
+            font-size: 1.2rem;
+            color: var(--secondary-color);
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards;
+        }
+
+        @keyframes textReveal {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes gradientFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes fadeUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 以下保持原样未修改 */
+        .projects {
+            display: flex;
+            flex-direction: column;
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .projects-text {
+            display: flex;
+            justify-content: left;
+            border-radius: 10px;
+            background-color: white;
+            margin: 5px;
+        }
+
+        .projects-text h2 {
+            margin: 5px;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .project-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .project-card.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .project-img {
+            width: 100%;
+            height: 70%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .tech-tags {
+            margin-top: 1rem;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #e3f2fd;
+            color: #007BFF;
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            margin-right: 0.4rem;
+            font-size: 0.8rem;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: #f1f3f5;
+            margin-top: 4rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="particles-js"></div>
+    <nav>
+        <div class="nav-container">
+            <h1>我的作品集</h1>
+            <div class="social-links">
+                <a href="https://github.com/mkjnl" target="_blank"><i class="fab fa-github"></i></a>
+                <a href="https://space.bilibili.com/3493078193146608?spm_id_from=333.1007.0.0" target="_blank"><i
+                        class="fab fa-bilibili"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>创意驱动开发</h1>
+            <p>写代码、搞创意，生活全靠一口气！</p>
+            <p>第一个UI自适应的网站哈哈！</p>
+        </div>
+    </section>
+
+    <section class="projects">
+        <div class="projects-text">
+            <h2>我的项目</h2>
+        </div>
+        <div class="projects-grid">
+            <div class="project-card">
+                <img src="./image/long.png" alt="预览" class="project-img">
+                <h3>屠龍酒馆</h3>
+                <p>电影《龙之谷·破晓奇兵》的同人网站。</p>
+                <div class="tech-tags">
+                    <span class="tag">开发中无法预览...</span>
+                    <span class="tag">Vue3</span>
+                    <span class="tag">UniApp</span>
+                </div>
+            </div>
+
+            <div class="project-card" onclick="window.location.href='./game/game.html'">
+                <div class="project-img"></div>
+                <h3>保险柜行动</h3>
+                <p>破解保险箱·取得战利品！</p>
+                <div class="tech-tags">
+                    <span class="tag">html</span>
+                    <span class="tag">css</span>
+                    <span class="tag">js</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="footer">
+        <h2>📬 有项目合作或想法？</h2>
+        <p>欢迎联系我，期待一起搞事情！</p>
+        <br><br>
+        <iframe style="border-radius:12px"
+            src="https://open.spotify.com/embed/track/1rdWZwaKOr2unOYYFFKrjX?utm_source=generator" width="100%"
+            height="152" frameBorder="0" allowfullscreen=""
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+    </section>
+
+    <script>
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 60 },
+                color: { value: '#00a1d6' },
+                shape: { type: 'circle' },
+                opacity: { value: 0.4 },
+                size: { value: 3 },
+                line_linked: {
+                    enable: true,
+                    distance: 120,
+                    color: '#00a1d6',
+                    opacity: 0.4,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: 2
+                }
+            },
+            interactivity: {
+                detect_on: 'canvas',
+                events: {
+                    onhover: { enable: true, mode: 'grab' }
+                }
+            },
+            retina_detect: true
+        });
+
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('show');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.project-card').forEach(card => {
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>

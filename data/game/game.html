@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <title>保险箱行动</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* 全局样式 */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Consolas", monospace;
+    }
+
+    body {
+      background-color: #0a0a0a;
+      color: #e0e0e0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: auto;
+      padding: 1rem;
+    }
+
+    /* 主面板样式 */
+    .hack-panel {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 90%;
+      max-width: 800px;
+      background: rgba(10, 10, 10, 0.95);
+      border: 2px solid #00ffcc;
+      padding: 2vmin;
+      position: relative;
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+      flex-direction: row;
+      gap: 2vmin;
+    }
+
+    /* 密码列容器 */
+    .columns {
+      width: 60vw;
+      max-width: 500px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      position: relative;
+      height: 40vh;
+      max-height: 300px;
+      border-top: 1px solid #444;
+      border-bottom: 1px solid #444;
+      overflow: hidden;
+      background: rgba(20, 20, 20, 0.8);
+    }
+
+    /* 单个密码列 */
+    .column {
+      width: 10vw;
+      max-width: 50px;
+      height: 100%;
+      overflow: hidden;
+      border: 1px solid #666;
+      position: relative;
+      transition: all 0.3s;
+      background: #1a1a1a;
+    }
+
+    .column.active {
+      border-color: #00ffcc;
+      box-shadow: 0 0 15px #00ffcc;
+    }
+
+    /* 按钮样式 */
+    button {
+      background: #1a1a1a;
+      border: 3px solid #00ffcc;
+      color: #00ffcc;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+      font-size: clamp(0.8rem, 2vmin, 1rem);
+      padding: 1vmin 2vmin;
+    }
+
+    button:hover {
+      background: #2a2a2a;
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
+    }
+
+    /* 字符容器 */
+    .char-wrapper {
+      position: absolute;
+      width: 100%;
+    }
+
+    /* 单个字符 */
+    .char {
+      font-size: clamp(1.2rem, 3vmin, 1.8rem);
+      height: clamp(40px, 8vh, 60px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #aaa;
+      position: relative;
+    }
+
+    .char.highlight {
+      color: #00ffcc !important;
+      font-weight: bold;
+      text-shadow: 0 0 15px #00ffcc !important;
+    }
+
+    /* 中心线 */
+    .center-line {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: clamp(60px, 12vh, 80px);
+      background: rgba(0, 255, 204, 0.15);
+      border: 2px dashed #00ffcc;
+      transform: translateY(-50%);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* 进度条 */
+    .progress-container {
+      margin-top: 2vmin;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    .progress-label {
+      width: auto;
+      font-size: clamp(0.7rem, 1.5vmin, 0.9rem);
+      color: #00ffcc;
+      margin-right: 1vmin;
+    }
+
+    .progress-bar {
+      flex-grow: 1;
+      height: clamp(6px, 1vmin, 8px);
+      background: #333;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-inner {
+      height: 100%;
+      background: #00ffcc;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .timer {
+      margin-left: 1vmin;
+      color: #ff3333;
+      font-weight: bold;
+      font-size: clamp(0.7rem, 1.5vmin, 0.9rem);
+    }
+
+    .instruction {
+      color: #00ffcc;
+      font-size: clamp(0.8rem, 1.8vmin, 1rem);
+      margin-bottom: 1vmin;
+      text-align: center;
+    }
+
+    .instruction h3 {
+      font-size: clamp(0.9rem, 2vmin, 1.1rem);
+      margin-bottom: 0.5vmin;
+    }
+
+    .instruction div {
+      font-size: clamp(0.7rem, 1.5vmin, 0.85rem);
+      line-height: 1.4;
+    }
+
+    .attempts {
+      color: #e0e0e0;
+      font-size: clamp(0.8rem, 1.8vmin, 1rem);
+      margin-bottom: 1vmin;
+    }
+
+    /* 奖励界面 */
+    .reward-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      padding: 1rem;
+    }
+
+    .reward-box {
+      background: #1a1a1a;
+      border: 2px solid #00ffcc;
+      padding: 2vmin;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+    }
+
+    .reward-title {
+      font-size: clamp(1.2rem, 3vmin, 1.5rem);
+      color: #00ffcc;
+      background: #0f0f0f;
+      padding: 1vmin;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .reward-content {
+      margin-top: clamp(40px, 8vh, 50px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    /* 奖励网格 */
+    .reward-grid {
+      display: grid;
+      grid-template-columns: repeat(4, clamp(50px, 10vw, 80px));
+      grid-template-rows: repeat(4, clamp(50px, 10vw, 80px));
+      width: clamp(200px, 40vw, 320px);
+      height: clamp(200px, 40vw, 320px);
+      background: linear-gradient(45deg, #222, #2a2a2a);
+      /* 默认背景 */
+      margin-bottom: 2vmin;
+      border: 1px solid #444;
+      position: relative;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+      transition: background 0.3s;
+      overflow: visible;
+    }
+
+    /* 网格单元 */
+    .grid-cell {
+      background: #222;
+      border: 1px solid #444;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 高亮单元（被战利品占用） */
+    .grid-cell.highlighted {
+      position: relative;
+    }
+
+    /* epic 品质：空白网格亮红色闪光 */
+    .grid-cell.epic-blank {
+      background: #ff3333;
+      border: 1px solid #ff6666;
+      animation: glowPulse 1.5s ease-in-out infinite;
+    }
+
+    /* 发光动画 */
+    @keyframes glowPulse {
+      0% {
+        box-shadow: 0 0 5px #ff3333, 0 0 10px #ff3333;
+      }
+
+      50% {
+        box-shadow: 0 0 15px #ff3333, 0 0 30px #ff3333;
+      }
+
+      100% {
+        box-shadow: 0 0 5px #ff3333, 0 0 10px #ff3333;
+      }
+    }
+
+    .reward-grid.revealed {
+      background: linear-gradient(45deg, #222, #2a2a2a), radial-gradient(circle at center, rgba(0, 255, 204, 0.2) 0%, transparent 70%);
+    }
+
+    .grid-cell.highlighted {
+      position: relative;
+    }
+
+    .grid-cell.highlighted.common {
+      background: #2a2a2a;
+      border: 1px solid #666;
+    }
+
+    .grid-cell.highlighted.rare {
+      background: #1a2a4a;
+      border: 1px solid #336699;
+    }
+
+    .grid-cell.highlighted.epic {
+      background: #4a1c1c;
+      border: 1px solid #6b2d2d;
+    }
+
+    .animation-container {
+      position: relative;
+      z-index: 3;
+      grid-column: 1 / span 1;
+      grid-row: 1 / span 1;
+    }
+
+    .item-mask {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .diagonal-stripes {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(45deg,
+          rgba(192, 192, 192, 0.3),
+          rgba(192, 192, 192, 0.3) 10px,
+          transparent 10px,
+          transparent 20px);
+    }
+
+    .magnifier {
+      width: clamp(20px, 4vw, 32px);
+      height: clamp(20px, 4vw, 32px);
+      background-image: url('https://upload.wikimedia.org/wikipedia/commons/5/55/Magnifying_glass_icon.svg');
+      background-size: contain;
+      background-repeat: no-repeat;
+      animation: orbit 3s linear infinite;
+      z-index: 20;
+    }
+
+    @keyframes orbit {
+      0% {
+        transform: translate(0, 0);
+      }
+
+      25% {
+        transform: translate(clamp(20px, 4vw, 30px), 0);
+      }
+
+      50% {
+        transform: translate(0, clamp(20px, 4vw, 30px));
+      }
+
+      75% {
+        transform: translate(clamp(-20px, -4vw, -30px), 0);
+      }
+
+      100% {
+        transform: translate(0, clamp(-20px, -4vw, -30px));
+      }
+    }
+
+    .flash-overlay {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: 99;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .flash {
+      animation: flashGradient 0.5s ease-out forwards;
+    }
+
+    @keyframes flashGradient {
+      0% {
+        opacity: 0;
+        background: transparent;
+      }
+
+      50% {
+        opacity: 1;
+        background: linear-gradient(45deg, var(--quality-start), var(--quality-end));
+      }
+
+      100% {
+        opacity: 0;
+        background: transparent;
+      }
+    }
+
+    .quality-common {
+      --quality-start: #666;
+      --quality-end: #999;
+    }
+
+    .quality-rare {
+      --quality-start: #336699;
+      --quality-end: #6699cc;
+    }
+
+    .quality-epic {
+      --quality-start: #6b2d2d;
+      --quality-end: #9e4f4f;
+    }
+
+    .reward-image {
+      position: absolute;
+      z-index: 2;
+      background: transparent;
+      opacity: 0;
+      transform: translateY(clamp(10px, 2vh, 20px));
+      transition: opacity 0.3s, transform 0.3s;
+      overflow: hidden;
+    }
+
+    .reward-image.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reward-image img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .reward-image::before {
+      content: attr(data-item);
+      color: #ffffff;
+      white-space: nowrap;
+      font-size: clamp(5px, 2.5vmin, 10px);
+      font-weight: bold;
+      font-family: "Consolas", "Arial", sans-serif;
+      position: absolute;
+      transform: translateX(-50%);
+      text-shadow: 0 0 8px rgba(0, 255, 204, 0.8);
+      padding: 0.5vmin 1vmin;
+      border-radius: 5px;
+      z-index: 3;
+    }
+
+    .out-button {
+      width: clamp(80px, 20vw, 100px);
+      height: clamp(40px, 8vh, 50px);
+      margin-top: 2vmin;
+      background: #00ffcc;
+      border: none;
+      color: #0a0a0a;
+      font-weight: bold;
+      box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+    }
+
+    .out-button:hover {
+      background: #00cc99;
+    }
+
+    .ove-button {
+      width: clamp(120px, 25vw, 200px);
+      height: clamp(120px, 25vw, 200px);
+      border-radius: 50%;
+    }
+
+    /* 失败弹窗 */
+    .failure-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      padding: 1rem;
+    }
+
+    .failure-box {
+      background: #1a1a1a;
+      border: 2px solid #ff3333;
+      padding: 2vmin;
+      width: 90%;
+      max-width: 300px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 0 15px rgba(255, 51, 51, 0.2);
+    }
+
+    .failure-title {
+      font-size: clamp(1.2rem, 3vmin, 1.5rem);
+      color: #ff3333;
+      background: #0f0f0f;
+      padding: 1vmin;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .failure-content {
+      margin-top: clamp(40px, 8vh, 50px);
+      color: #e0e0e0;
+      font-size: clamp(1rem, 2.5vmin, 1.125rem);
+    }
+
+    .retry-button {
+      width: clamp(80px, 20vw, 100px);
+      height: clamp(40px, 8vh, 50px);
+      margin-top: 2vmin;
+      background: #ff3333;
+      border: none;
+      color: #e0e0e0;
+      box-shadow: 0 0 10px rgba(255, 51, 51, 0.3);
+    }
+
+    .retry-button:hover {
+      background: #cc2929;
+    }
+
+    /* 反馈信息 */
+    .feedback {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: clamp(1.5rem, 4vmin, 2rem);
+      font-weight: bold;
+      text-shadow: 0 0 10px #000;
+      opacity: 0;
+      transition: opacity 0.5s;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .success {
+      color: #00ffcc;
+    }
+
+    .fail {
+      color: #ff3333;
+    }
+
+    /* 仓库界面 */
+    .warehouse-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      padding: 1rem;
+    }
+
+    .warehouse-box {
+      background: #1a1a1a;
+      border: 2px solid #00ffcc;
+      padding: 2vmin;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+    }
+
+    .warehouse-title {
+      font-size: clamp(1.2rem, 3vmin, 1.5rem);
+      color: #00ffcc;
+      background: #0f0f0f;
+      padding: 1vmin;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .warehouse-content {
+      margin-top: clamp(40px, 8vh, 50px);
+      display: flex;
+      flex-direction: column;
+      gap: 2vmin;
+    }
+
+    .warehouse-item {
+      display: flex;
+      align-items: center;
+      gap: 1.5vmin;
+      padding: 1vmin;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 5px;
+    }
+
+    .warehouse-item img {
+      width: clamp(60px, 12vw, 80px);
+      height: clamp(60px, 12vw, 80px);
+      object-fit: contain;
+    }
+
+    .warehouse-item-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5vmin;
+    }
+
+    .warehouse-item-name {
+      font-size: clamp(1rem, 2.5vmin, 1.125rem);
+      color: #00ffcc;
+      font-weight: bold;
+    }
+
+    .warehouse-item-count {
+      font-size: clamp(0.8rem, 1.8vmin, 0.875rem);
+      color: #e0e0e0;
+    }
+
+    .warehouse-item-description {
+      font-size: clamp(0.8rem, 1.8vmin, 0.875rem);
+      color: #aaa;
+    }
+
+    .warehouse-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 2vmin;
+      gap: 1vmin;
+    }
+
+    .warehouse-back-button,
+    .warehouse-clear-button {
+      width: clamp(80px, 20vw, 100px);
+      height: clamp(40px, 8vh, 50px);
+      border: none;
+      font-size: clamp(0.9rem, 2vmin, 1rem);
+    }
+
+    .warehouse-back-button {
+      background: #00ffcc;
+      color: #0a0a0a;
+      box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+    }
+
+    .warehouse-back-button:hover {
+      background: #00cc99;
+    }
+
+    .warehouse-clear-button {
+      background: #ff3333;
+      color: #e0e0e0;
+      box-shadow: 0 0 10px rgba(255, 51, 51, 0.3);
+    }
+
+    .warehouse-clear-button:hover {
+      background: #cc2929;
+    }
+
+    /* 仓库入口按钮 */
+    .warehouse-entry-button {
+      position: absolute;
+      top: 1vmin;
+      right: 1vmin;
+      padding: clamp(6px, 1.5vmin, 8px) clamp(12px, 3vmin, 16px);
+      background: #00ffcc;
+      border: none;
+      color: #0a0a0a;
+      font-size: clamp(0.7rem, 1.5vmin, 0.875rem);
+      font-weight: bold;
+      box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+    }
+
+    .warehouse-entry-button:hover {
+      background: #00cc99;
+    }
+
+    /* 媒体查询 - 平板 */
+    @media (max-width: 1023px) {
+      .hack-panel {
+        padding: 1.5vmin;
+      }
+
+      .columns {
+        width: 50vw;
+        height: 35vh;
+      }
+
+      .column {
+        width: 8vw;
+        max-width: 40px;
+      }
+
+      .char {
+        font-size: clamp(1rem, 2.5vmin, 1.5rem);
+        height: clamp(30px, 6vh, 50px);
+      }
+
+      .center-line {
+        height: clamp(50px, 10vh, 70px);
+      }
+
+      .ove-button {
+        width: clamp(100px, 20vw, 150px);
+        height: clamp(100px, 20vw, 150px);
+      }
+    }
+
+    /* 媒体查询 - 手机 */
+    @media (max-width: 767px) {
+      body {
+        padding: 0.5rem;
+      }
+
+      .hack-panel {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 100%;
+        padding: 1rem;
+        gap: 1rem;
+      }
+
+      .centleft {
+        width: 100%;
+      }
+
+      .columns {
+        width: 90vw;
+        max-width: 100%;
+        height: 30vh;
+        max-height: 200px;
+      }
+
+      .column {
+        width: 15vw;
+        max-width: 50px;
+      }
+
+      .char {
+        font-size: clamp(0.8rem, 2vmin, 1.2rem);
+        height: clamp(25px, 5vh, 40px);
+      }
+
+      .center-line {
+        height: clamp(40px, 8vh, 60px);
+      }
+
+      .progress-container {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .progress-label,
+      .timer {
+        font-size: clamp(0.6rem, 1.2vmin, 0.8rem);
+      }
+
+      .progress-bar {
+        height: clamp(4px, 0.8vmin, 6px);
+      }
+
+      .instruction h3 {
+        font-size: clamp(0.8rem, 1.8vmin, 1rem);
+      }
+
+      .instruction div {
+        font-size: clamp(0.6rem, 1.2vmin, 0.75rem);
+      }
+
+      .attempts {
+        font-size: clamp(0.7rem, 1.5vmin, 0.9rem);
+      }
+
+      .ove-button {
+        width: clamp(80px, 25vw, 120px);
+        height: clamp(80px, 25vw, 120px);
+      }
+
+      .reward-box,
+      .failure-box,
+      .warehouse-box {
+        padding: 1rem;
+        width: 95%;
+        max-width: 95%;
+      }
+
+      .reward-grid {
+        grid-template-columns: repeat(4, clamp(40px, 8vw, 60px));
+        grid-template-rows: repeat(4, clamp(40px, 8vw, 60px));
+        width: clamp(160px, 32vw, 240px);
+        height: clamp(160px, 32vw, 240px);
+      }
+
+      .warehouse-item img {
+        width: clamp(40px, 10vw, 60px);
+        height: clamp(40px, 10vw, 60px);
+      }
+
+      .warehouse-item-name {
+        font-size: clamp(0.9rem, 2vmin, 1rem);
+      }
+
+      .warehouse-item-count,
+      .warehouse-item-description {
+        font-size: clamp(0.7rem, 1.5vmin, 0.8rem);
+      }
+
+      .warehouse-buttons {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .warehouse-back-button,
+      .warehouse-clear-button {
+        width: 100%;
+        max-width: 200px;
+      }
+
+      .warehouse-entry-button {
+        padding: clamp(4px, 1vmin, 6px) clamp(8px, 2vmin, 12px);
+        font-size: clamp(0.6rem, 1.2vmin, 0.75rem);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="hack-panel">
+    <div class="centleft">
+      <div class="instruction">
+        <h3>破解方法</h3>
+        <div>
+          当<span style="color:#00ffcc">绿色密码</span>到达中央时按空格键
+        </div>
+
+        <div class="sp-css" style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+          <span style="color: red;">！！注意！！</span>
+          <span style="color: #00ffcc;">仓库数据存储在设备上，如果清除其浏览器数据或切换设备/浏览器，仓库将重置</span>
+        </div>
+
+      </div>
+      <div class="attempts" id="attempts">剩余尝试次数: 3/3</div>
+      <div class="columns" id="columns">
+        <div class="center-line" id="centerLine"></div>
+        <div class="column">
+          <div class="char-wrapper"></div>
+        </div>
+        <div class="column">
+          <div class="char-wrapper"></div>
+        </div>
+        <div class="column">
+          <div class="char-wrapper"></div>
+        </div>
+        <div class="feedback" id="feedback"></div>
+      </div>
+      <div class="progress-container">
+        <div class="progress-label">
+          >>解锁进度
+        </div>
+        <div class="progress-bar">
+          <div class="progress-inner" id="progress"></div>
+        </div>
+        <div class="timer" id="timer">[<span id="percentage">0</span>%]</div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 1rem;">
+      <button class="ove-button" id="startBtn" onclick="window.startGame()">解锁</button>
+      <button class="ove-button" id="selectBtn" style="display: none;">选定密码</button>
+    </div>
+
+    <!-- 仓库入口按钮 -->
+    <button class="warehouse-entry-button" onclick="window.showWarehouse()">仓库</button>
+  </div>
+
+  <!-- 奖励界面 -->
+  <div class="reward-screen" id="rewardScreen">
+    <div class="reward-box">
+      <div class="reward-title">保险箱</div>
+      <div class="reward-content">
+        <div class="reward-grid" id="rewardGrid">
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="reward-image" id="rewardImage"></div>
+        </div>
+        <button class="out-button" onclick="window.resetGame()">继续</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 失败弹窗 -->
+  <div class="failure-screen" id="failureScreen">
+    <div class="failure-box">
+      <div class="failure-title">破解失败</div>
+      <div class="failure-content">
+        破解失败，请重试！
+        <button class="retry-button" onclick="window.resetGame()">重试</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 仓库界面 -->
+  <div class="warehouse-screen" id="warehouseScreen">
+    <div class="warehouse-box">
+      <div class="warehouse-title">我的仓库</div>
+      <div class="warehouse-content" id="warehouseContent">
+        <!-- 动态生成物品 -->
+      </div>
+      <div class="warehouse-buttons">
+        <button class="warehouse-back-button" onclick="window.hideWarehouse()">返回</button>
+        <button class="warehouse-clear-button" onclick="window.clearWarehouse()">清空</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/script.js"></script>
+</body>
+
+</html>
